@@ -39,6 +39,8 @@ h1 { font-size:clamp(54px,8vw,112px); line-height:.91; letter-spacing:-.055em; m
 .respondent-question-row { border-top:1px solid var(--line); padding:20px 0; }
 .respondent-question-row label { display:block; font-weight:700; line-height:1.4; margin-bottom:12px; }
 .respondent-question-row textarea { width:100%; border:1px solid var(--line); background:var(--paper); padding:12px; font:inherit; resize:vertical; }
+.consent-row { display:flex; gap:10px; align-items:flex-start; color:var(--muted); font-size:13px; line-height:1.4; margin:20px 0; }
+.consent-row input { margin-top:3px; }
 .respondent-submit { background:var(--orange); color:#fff; border:0; padding:15px 22px; cursor:pointer; font-weight:700; }
 .respondent-receipt { border-left:3px solid var(--orange); background:#ebe8e0; padding:20px 24px; margin-top:25px; color:#393733; line-height:1.5; }
 

@@ -73,13 +73,22 @@ function renderRespondent(draft) {
   document.querySelector('.hero').hidden = true;
   $('workspace').hidden = true;
   $('respondentView').hidden = false;
-  $('respondentContent').innerHTML = `<article class="respondent-card"><div class="eyebrow">${esc(draft.host || 'CREATOR EVAL')}</div><h2>${esc(draft.title)}</h2><p class="respondent-question">${esc(draft.question)}</p><form id="respondentForm" class="respondent-form">${draft.questions.map((q, i) => `<div class="respondent-question-row"><label for="response-${i}">${esc(q.text)}</label><textarea id="response-${i}" rows="3" required></textarea></div>`).join('')}<button class="respondent-submit" type="submit">Submit responses →</button></form><div id="respondentReceipt" class="respondent-receipt" hidden></div></article>`;
-  $('respondentForm').addEventListener('submit', (event) => {
+  $('respondentContent').innerHTML = `<article class="respondent-card"><div class="eyebrow">${esc(draft.host || 'CREATOR EVAL')}</div><h2>${esc(draft.title)}</h2><p class="respondent-question">${esc(draft.question)}</p><form id="respondentForm" class="respondent-form">${draft.questions.map((q, i) => `<div class="respondent-question-row"><label for="response-${i}">${esc(q.text)}</label><textarea id="response-${i}" rows="3" required></textarea></div>`).join('')}<label class="consent-row"><input id="responseConsent" type="checkbox" required> I agree that these responses may be stored for this evaluation and used to generate a report.</label><button class="respondent-submit" type="submit">Submit responses →</button></form><div id="respondentReceipt" class="respondent-receipt" hidden></div></article>`;
+  $('respondentForm').addEventListener('submit', async (event) => {
     event.preventDefault();
-    const response = { submitted_at: new Date().toISOString(), source: draft.host, answers: draft.questions.map((_, i) => $(`response-${i}`).value) };
-    localStorage.setItem(`creator-eval:response:${Date.now()}`, JSON.stringify(response));
-    $('respondentReceipt').hidden = false;
-    $('respondentReceipt').innerHTML = '<strong>Response recorded in this browser.</strong><br>This preview does not score or transmit your answers yet. The next layer is a real response store with explicit consent and report provenance.';
+    const answers = draft.questions.map((_, i) => $(`response-${i}`).value);
+    const payload = { eval_slug: draft.slug || (draft.host || 'creator-eval').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase(), eval_version: Number(draft.version || 1), source_host: draft.host || 'unknown', consent: $('responseConsent').checked, answers };
+    try {
+      const response = await fetch('/api/responses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Response store unavailable.');
+      $('respondentReceipt').hidden = false;
+      $('respondentReceipt').innerHTML = `<strong>Response recorded.</strong><br>Receipt: ${esc(data.response_receipt_id)}<br>Status: ${esc(data.status)}.`;
+    } catch (error) {
+      localStorage.setItem(`creator-eval:response:${Date.now()}`, JSON.stringify({ ...payload, stored: 'local-only fallback', error: error.message }));
+      $('respondentReceipt').hidden = false;
+      $('respondentReceipt').innerHTML = `<strong>Response recorded in this browser.</strong><br>This is a local-only fallback because the response store is unavailable. No score or report was claimed.`;
+    }
   });
 }
 function bootRespondent() {

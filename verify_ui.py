@@ -29,8 +29,11 @@ with sync_playwright() as p:
     assert respondent.locator('.respondent-question-row').count() == 3
     for i in range(3):
         respondent.fill(f'#response-{i}', f'answer {i}')
+    respondent.check('#responseConsent')
     respondent.click('.respondent-submit')
+    respondent.wait_for_timeout(300)
     assert respondent.locator('#respondentReceipt').is_visible()
+    assert 'local-only fallback' in respondent.locator('#respondentReceipt').inner_text()
     respondent.screenshot(path='/Users/leoguinan/.hermes/profiles/quainance/cache/scratch/creator-eval-respondent.png', full_page=True)
     respondent.close()
     print('interaction_receipt=passed dimensions=6 questions=3 calibration=6 version=1 respondent=3 export=visible')
