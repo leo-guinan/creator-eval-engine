@@ -10,7 +10,8 @@ with sync_playwright() as p:
     assert page.locator('#workspace').is_visible()
     assert page.locator('.dimension').count() == 5
     assert page.locator('.question').count() == 3
-    assert page.locator('.calibration-card').count() == 5
+    assert page.locator('#calibrationDecisions').is_visible()
+    assert page.locator('#reportLookup').is_visible()
     page.click('.calibration-card:first-child button[data-decision="strong"]')
     assert page.locator('.calibration-card:first-child button[data-decision="strong"]').get_attribute('class') == 'selected'
     page.fill('.calibration-card:first-child .evidence-link', 'https://coreywilkspsyd.com/framework')

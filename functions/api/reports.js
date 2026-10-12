@@ -13,6 +13,15 @@ function json(data, status = 200) {
   return Response.json(data, { status, headers: { 'Cache-Control': 'no-store' } });
 }
 
+export async function onRequestGet(context) {
+  if (!context.env.DB) return json({ error: 'Report store is not configured.' }, 503);
+  const reportReceiptId = new URL(context.request.url).searchParams.get('report_receipt_id')?.trim() || '';
+  if (!reportReceiptId) return json({ error: 'A report receipt ID is required.' }, 400);
+  const row = await context.env.DB.prepare('SELECT report_receipt_id, response_receipt_id, eval_slug, report_json, created_at, status FROM report_receipts WHERE report_receipt_id = ?').bind(reportReceiptId).first();
+  if (!row) return json({ error: 'Report receipt not found.' }, 404);
+  return json({ report_receipt_id: row.report_receipt_id, response_receipt_id: row.response_receipt_id, eval_slug: row.eval_slug, created_at: row.created_at, status: row.status, report: JSON.parse(row.report_json) });
+}
+
 export async function onRequestPost(context) {
   if (!context.env.DB) return json({ error: 'Report store is not configured.' }, 503);
   let body;

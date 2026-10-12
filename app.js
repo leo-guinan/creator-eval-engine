@@ -71,8 +71,33 @@ function renderVersionHistory() {
 }
 function renderPersonalizedReport(data) {
   const report = data.report;
-  $('personalizedReport').hidden = false;
-  $('personalizedReport').innerHTML = `<div class="report-kicker">DRAFT REPORT · RECEIPT ${esc(data.report_receipt_id)}</div><h3>Current constraint: ${esc(report.primary_constraint)}</h3><div class="report-confidence">CONFIDENCE: ${esc(report.confidence)} · METHOD: ${esc(report.method)}</div><p>${esc(report.observation)}</p><p>${esc(report.interpretation)}</p><div class="report-experiment"><span>NEXT EXPERIMENT</span><p>${esc(report.next_experiment)}</p></div><div class="report-retest">RE-TEST · ${esc(report.re_test)}</div><small>${esc(report.claim_boundary)}</small>`;
+  const history = JSON.parse(localStorage.getItem('creator-eval:report-history') || '[]');
+  if (data.report_receipt_id && !history.some((item) => item.report_receipt_id === data.report_receipt_id)) {
+    history.unshift({ report_receipt_id: data.report_receipt_id, eval_slug: data.eval_slug || currentDraft?.host || 'unknown', created_at: new Date().toISOString() });
+    localStorage.setItem('creator-eval:report-history', JSON.stringify(history.slice(0, 20)));
+  }
+  const target = $('personalizedReport') || $('creatorReportResult');
+  if (!target) return;
+  target.hidden = false;
+  target.innerHTML = `<div class="report-kicker">DRAFT REPORT · RECEIPT ${esc(data.report_receipt_id)}</div><h3>Current constraint: ${esc(report.primary_constraint)}</h3><div class="report-confidence">CONFIDENCE: ${esc(report.confidence)} · METHOD: ${esc(report.method)}</div><p>${esc(report.observation)}</p><p>${esc(report.interpretation)}</p><div class="report-experiment"><span>NEXT EXPERIMENT</span><p>${esc(report.next_experiment)}</p></div><div class="report-retest">RE-TEST · ${esc(report.re_test)}</div><small>${esc(report.claim_boundary)}</small>`;
+  renderReportHistory();
+}
+function renderReportHistory() {
+  const history = JSON.parse(localStorage.getItem('creator-eval:report-history') || '[]');
+  $('reportHistory').hidden = history.length === 0;
+  $('reportHistory').innerHTML = history.map((item) => `<div class="report-history-item"><span>${esc(item.report_receipt_id)}</span><span>${new Date(item.created_at).toLocaleString()}</span></div>`).join('');
+}
+async function lookupReport() {
+  const receipt = $('reportReceiptInput').value.trim();
+  if (!receipt) { $('reportLookupStatus').textContent = 'Enter a report receipt ID.'; return; }
+  $('reportLookupStatus').textContent = 'Looking up receipt…';
+  try {
+    const response = await fetch(`/api/reports?report_receipt_id=${encodeURIComponent(receipt)}`);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Report lookup failed.');
+    renderPersonalizedReport(data);
+    $('reportLookupStatus').textContent = 'Report retrieved from the durable receipt store.';
+  } catch (error) { $('reportLookupStatus').textContent = error.message; }
 }
 function renderRespondent(draft) {
   document.querySelector('.hero').hidden = true;
@@ -218,4 +243,6 @@ $('exportBtn').addEventListener('click', () => {
   $('exportOutput').textContent = JSON.stringify(payload, null, 2);
   $('exportOutput').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 });
+$('lookupReportBtn').addEventListener('click', lookupReport);
+renderReportHistory();
 bootRespondent();

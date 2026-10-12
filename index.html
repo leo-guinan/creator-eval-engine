@@ -74,6 +74,15 @@
         <button id="addQuestion" class="add-button">+ Add question</button>
       </section>
 
+      <section id="reportLookup" class="panel report-lookup-panel">
+        <div class="panel-label">04 / REPORT LOOKUP <span>RECEIPT-BASED, NOT A PUBLIC FEED</span></div>
+        <p class="lookup-note">Paste a report receipt ID to retrieve a stored report. Recent IDs are kept in this browser only; the lookup itself reads the durable receipt store.</p>
+        <div class="lookup-row"><input id="reportReceiptInput" class="edit-input" placeholder="report receipt ID"><button id="lookupReportBtn" class="secondary-button">Look up report</button></div>
+        <div id="reportLookupStatus" class="save-status" aria-live="polite"></div>
+        <div id="creatorReportResult" class="personalized-report" hidden></div>
+        <div id="reportHistory" class="report-history" hidden></div>
+      </section>
+
       <div class="publish-row">
         <div><strong>Your eval is a draft.</strong><br><span>Save a local copy, record a version, or open a respondent preview with the current draft.</span><div id="saveStatus" class="save-status" aria-live="polite"></div></div>
         <div class="publish-actions"><button id="saveDraftBtn" class="secondary-button">Save draft</button><button id="saveVersionBtn" class="secondary-button">Save version</button><button id="exportBtn" class="secondary-button">Export JSON</button><button id="publishBtn" class="primary-button">Preview respondent view <span>→</span></button></div>
