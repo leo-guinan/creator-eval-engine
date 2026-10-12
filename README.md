@@ -36,7 +36,7 @@ The D1 schema stores an eval slug/version, source host, consent flag, timestamp,
 
 ## Report boundary
 
-The first rubric is intentionally narrow and deterministic: keyword signals over response text. It emits `MISSING` when no supported signal exists, labels confidence as low or low-to-moderate, names the method, and includes a claim boundary. It does not diagnose, infer traits, or claim causality. New evals require their own approved scoring rubric; the endpoint rejects unknown slugs.
+The first rubric is intentionally narrow and deterministic: keyword signals over response text. It emits `MISSING` when no supported signal exists, labels confidence as low or low-to-moderate, names the method, and includes a claim boundary. It does not diagnose, infer traits, or claim causality. New evals require their own approved scoring rubric; the endpoint rejects unknown slugs. Reports are persisted against response receipt IDs and repeated requests are idempotent.
 
 
 Do not commit respondent answers, emails, access tokens, API keys, private creator notes, or raw crawl dumps. This repository is for compiled public-safe definitions and schemas, not participant data.

@@ -14,6 +14,7 @@ function json(data, status = 200) {
 }
 
 export async function onRequestPost(context) {
+  if (!context.env.DB) return json({ error: 'Report store is not configured.' }, 503);
   let body;
   try { body = await context.request.json(); } catch { return json({ error: 'Invalid JSON body.' }, 400); }
   const responseReceiptId = typeof body.response_receipt_id === 'string' ? body.response_receipt_id.trim() : '';
@@ -23,23 +24,30 @@ export async function onRequestPost(context) {
     return json({ error: 'A response receipt, eval slug, and bounded answers are required.' }, 400);
   }
   if (evalSlug !== 'corey-action-gap') return json({ error: 'No approved scoring rubric exists for this eval.' }, 422);
+  const responseExists = await context.env.DB.prepare('SELECT response_receipt_id FROM response_receipts WHERE response_receipt_id = ?').bind(responseReceiptId).first();
+  if (!responseExists) return json({ error: 'Response receipt not found.' }, 404);
+  const existing = await context.env.DB.prepare('SELECT report_receipt_id, report_json FROM report_receipts WHERE response_receipt_id = ?').bind(responseReceiptId).first();
+  if (existing) return json({ report_receipt_id: existing.report_receipt_id, response_receipt_id: responseReceiptId, report: JSON.parse(existing.report_json), idempotent: true });
   const scored = scoreAnswers(answers);
   const reportReceiptId = crypto.randomUUID();
   const primary = scored.primary_constraint;
-  return json({
-    report_receipt_id: reportReceiptId,
-    response_receipt_id: responseReceiptId,
-    report: {
-      status: 'draft',
-      primary_constraint: primary,
-      confidence: scored.confidence,
-      observation: primary === 'MISSING' ? 'The supplied responses did not produce a supported signal under the current rubric.' : `The current rubric found ${scored.scores.find((item) => item.dimension === primary).signal_count} lexical signal(s) associated with ${primary}.`,
-      interpretation: 'This is a heuristic interpretation of response language, not a diagnosis or causal claim.',
-      next_experiment: experiments[primary],
-      re_test: '30 days',
-      scores: scored.scores,
-      method: scored.method,
-      claim_boundary: scored.claim_boundary
-    }
-  });
+  const report = {
+    status: 'draft',
+    primary_constraint: primary,
+    confidence: scored.confidence,
+    observation: primary === 'MISSING' ? 'The supplied responses did not produce a supported signal under the current rubric.' : `The current rubric found ${scored.scores.find((item) => item.dimension === primary).signal_count} lexical signal(s) associated with ${primary}.`,
+    interpretation: 'This is a heuristic interpretation of response language, not a diagnosis or causal claim.',
+    next_experiment: experiments[primary],
+    re_test: '30 days',
+    scores: scored.scores,
+    method: scored.method,
+    claim_boundary: scored.claim_boundary
+  };
+  const createdAt = new Date().toISOString();
+  try {
+    await context.env.DB.prepare('INSERT INTO report_receipts (report_receipt_id, response_receipt_id, eval_slug, report_json, created_at) VALUES (?, ?, ?, ?, ?)').bind(reportReceiptId, responseReceiptId, evalSlug, JSON.stringify(report), createdAt).run();
+    return json({ report_receipt_id: reportReceiptId, response_receipt_id: responseReceiptId, report });
+  } catch (error) {
+    return json({ error: 'Report could not be recorded.', detail: error.message }, 500);
+  }
 }
