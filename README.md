@@ -28,10 +28,15 @@ The current Corey record is a draft interpretation of public material. It is not
 5. A respondent preview can be shared as an encoded draft URL.
 6. Respondent submissions require explicit consent and are written to the Cloudflare D1 response store, producing a response receipt ID.
 7. If the store is unavailable, the browser uses a visibly labeled local-only fallback.
+8. A creator-approved rubric can generate a draft personalized report with a report receipt.
 
 ## Response store boundary
 
-The D1 schema stores an eval slug/version, source host, consent flag, timestamp, response receipt ID, and bounded answer text. It does not collect email, IP address, user agent, or other identity fields. The response endpoint does not score answers yet; scoring and personalized report generation require a versioned rubric and creator-approved mappings.
+The D1 schema stores an eval slug/version, source host, consent flag, timestamp, response receipt ID, and bounded answer text. It does not collect email, IP address, user agent, or other identity fields.
+
+## Report boundary
+
+The first rubric is intentionally narrow and deterministic: keyword signals over response text. It emits `MISSING` when no supported signal exists, labels confidence as low or low-to-moderate, names the method, and includes a claim boundary. It does not diagnose, infer traits, or claim causality. New evals require their own approved scoring rubric; the endpoint rejects unknown slugs.
 
 
 Do not commit respondent answers, emails, access tokens, API keys, private creator notes, or raw crawl dumps. This repository is for compiled public-safe definitions and schemas, not participant data.
@@ -39,9 +44,11 @@ Do not commit respondent answers, emails, access tokens, API keys, private creat
 ## Verification
 
 ```text
-pytest -q test_calibration.py test_layers.py
+pytest -q test_calibration.py test_layers.py test_response_store.py test_reports.py
 node --check app.js
 node --check functions/api/analyze.js
+node --check functions/api/responses.js
+node --check functions/api/reports.js
 python3 verify_ui.py
 ```
 

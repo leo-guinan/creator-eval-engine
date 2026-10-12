@@ -69,11 +69,16 @@ function renderVersionHistory() {
   $('versionHistory').hidden = versions.length === 0;
   $('versionHistory').innerHTML = versions.map((item) => `<div class="version-item"><span>Version ${item.version}</span><span>${new Date(item.saved_at).toLocaleString()}</span></div>`).join('');
 }
+function renderPersonalizedReport(data) {
+  const report = data.report;
+  $('personalizedReport').hidden = false;
+  $('personalizedReport').innerHTML = `<div class="report-kicker">DRAFT REPORT · RECEIPT ${esc(data.report_receipt_id)}</div><h3>Current constraint: ${esc(report.primary_constraint)}</h3><div class="report-confidence">CONFIDENCE: ${esc(report.confidence)} · METHOD: ${esc(report.method)}</div><p>${esc(report.observation)}</p><p>${esc(report.interpretation)}</p><div class="report-experiment"><span>NEXT EXPERIMENT</span><p>${esc(report.next_experiment)}</p></div><div class="report-retest">RE-TEST · ${esc(report.re_test)}</div><small>${esc(report.claim_boundary)}</small>`;
+}
 function renderRespondent(draft) {
   document.querySelector('.hero').hidden = true;
   $('workspace').hidden = true;
   $('respondentView').hidden = false;
-  $('respondentContent').innerHTML = `<article class="respondent-card"><div class="eyebrow">${esc(draft.host || 'CREATOR EVAL')}</div><h2>${esc(draft.title)}</h2><p class="respondent-question">${esc(draft.question)}</p><form id="respondentForm" class="respondent-form">${draft.questions.map((q, i) => `<div class="respondent-question-row"><label for="response-${i}">${esc(q.text)}</label><textarea id="response-${i}" rows="3" required></textarea></div>`).join('')}<label class="consent-row"><input id="responseConsent" type="checkbox" required> I agree that these responses may be stored for this evaluation and used to generate a report.</label><button class="respondent-submit" type="submit">Submit responses →</button></form><div id="respondentReceipt" class="respondent-receipt" hidden></div></article>`;
+  $('respondentContent').innerHTML = `<article class="respondent-card"><div class="eyebrow">${esc(draft.host || 'CREATOR EVAL')}</div><h2>${esc(draft.title)}</h2><p class="respondent-question">${esc(draft.question)}</p><form id="respondentForm" class="respondent-form">${draft.questions.map((q, i) => `<div class="respondent-question-row"><label for="response-${i}">${esc(q.text)}</label><textarea id="response-${i}" rows="3" required></textarea></div>`).join('')}<label class="consent-row"><input id="responseConsent" type="checkbox" required> I agree that these responses may be stored for this evaluation and used to generate a report.</label><button class="respondent-submit" type="submit">Submit responses →</button></form><div id="respondentReceipt" class="respondent-receipt" hidden></div><div id="personalizedReport" class="personalized-report" hidden></div></article>`;
   $('respondentForm').addEventListener('submit', async (event) => {
     event.preventDefault();
     const answers = draft.questions.map((_, i) => $(`response-${i}`).value);
@@ -84,6 +89,10 @@ function renderRespondent(draft) {
       if (!response.ok) throw new Error(data.error || 'Response store unavailable.');
       $('respondentReceipt').hidden = false;
       $('respondentReceipt').innerHTML = `<strong>Response recorded.</strong><br>Receipt: ${esc(data.response_receipt_id)}<br>Status: ${esc(data.status)}.`;
+      const reportResponse = await fetch('/api/reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ response_receipt_id: data.response_receipt_id, eval_slug: payload.eval_slug, answers }) });
+      const reportData = await reportResponse.json();
+      if (!reportResponse.ok) throw new Error(reportData.error || 'Report generation unavailable.');
+      renderPersonalizedReport(reportData);
     } catch (error) {
       localStorage.setItem(`creator-eval:response:${Date.now()}`, JSON.stringify({ ...payload, stored: 'local-only fallback', error: error.message }));
       $('respondentReceipt').hidden = false;
