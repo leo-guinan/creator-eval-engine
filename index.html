@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Creator Eval Engine — Leo as a Service</title>
+  <meta name="description" content="Turn the judgment inside your work into an evaluation and a personalized report.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar wrap">
+    <a class="wordmark" href="/">LEO AS A SERVICE <span>/ TOOLS</span></a>
+    <span class="status"><i></i> CREATOR EVAL ENGINE · PROTOTYPE</span>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <div class="eyebrow">A REPORTING TOOL FOR PEOPLE WITH TASTE</div>
+      <h1>Turn your expertise<br>into an <em>eval.</em></h1>
+      <p class="dek">Your website already contains a model of how you see the world. We turn that model into questions, scoring dimensions, and a report people can act on.</p>
+      <form id="analyzeForm" class="url-form" novalidate>
+        <label for="siteUrl">Your website</label>
+        <div class="input-row">
+          <input id="siteUrl" type="url" placeholder="https://yourwebsite.com" autocomplete="url" required>
+          <button type="submit">Build my eval <span>→</span></button>
+        </div>
+        <p class="form-note">Start with a public site. The first pass is a draft for you to correct, not a verdict about your work.</p>
+      </form>
+      <div id="formStatus" class="form-status" aria-live="polite"></div>
+    </section>
+
+    <section id="workspace" class="workspace wrap" hidden>
+      <div class="workspace-head">
+        <div>
+          <div class="eyebrow">DRAFT EXTRACTION · <span id="sourceHost"></span></div>
+          <h2>Here is the evaluation system we think is hiding in your work.</h2>
+        </div>
+        <button id="resetBtn" class="text-button">Start over ↗</button>
+      </div>
+      <div class="review-note"><strong>Teach us where we are wrong.</strong> Everything below is editable. The useful part is not the confidence of the first draft; it is the correction loop.</div>
+
+      <section class="panel calibration-panel">
+        <div class="panel-label">03 / CALIBRATION <span>YOUR JUDGMENT IS THE LABEL</span></div>
+        <div class="calibration-intro">For each proposed dimension, tell us how strongly it belongs in your framework. Add the evidence you would want a future report to cite.</div>
+        <div id="calibrationDecisions"></div>
+      </section>
+
+      <div class="workspace-grid">
+        <section class="panel dimensions-panel">
+          <div class="panel-label">01 / DIMENSIONS <span id="dimensionCount"></span></div>
+          <div id="dimensions"></div>
+          <button id="addDimension" class="add-button">+ Add dimension</button>
+        </section>
+        <section class="panel report-panel">
+          <div class="panel-label">02 / REPORT MODEL</div>
+          <label class="field-label" for="evalTitle">Assessment title</label>
+          <input class="edit-input title-input" id="evalTitle" value="The Action Gap Assessment">
+          <label class="field-label" for="question">Question this eval answers</label>
+          <textarea class="edit-input" id="question" rows="3">What's most likely preventing you from turning your ambition into action right now?</textarea>
+          <div class="report-preview">
+            <div class="preview-label">REPORT PREVIEW</div>
+            <div class="score-row"><span>Primary constraint</span><strong id="previewConstraint">Fear of Uncertainty</strong></div>
+            <p id="previewText">Your responses suggest you are gathering information past the point where it improves the decision. The next experiment should reduce the amount of certainty you are allowed to acquire.</p>
+            <div class="evidence"><span>EVIDENCE</span> Responses 4, 7, 13 · confidence: moderate</div>
+            <div class="recommendation"><span>NEXT EXPERIMENT</span><p>Give yourself 30 minutes to collect information, then make one reversible decision before the timer ends.</p></div>
+            <div class="retest">RE-TEST · 30 DAYS</div>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel questions-panel">
+        <div class="panel-label">03 / QUESTION BANK <span>COMPARATIVE JUDGMENT, NOT PERSONALITY THEATER</span></div>
+        <div id="questions"></div>
+        <button id="addQuestion" class="add-button">+ Add question</button>
+      </section>
+
+      <div class="publish-row">
+        <div><strong>Your eval is a draft.</strong><br><span>Save a local copy, record a version, or open a respondent preview with the current draft.</span><div id="saveStatus" class="save-status" aria-live="polite"></div></div>
+        <div class="publish-actions"><button id="saveDraftBtn" class="secondary-button">Save draft</button><button id="saveVersionBtn" class="secondary-button">Save version</button><button id="exportBtn" class="secondary-button">Export JSON</button><button id="publishBtn" class="primary-button">Preview respondent view <span>→</span></button></div>
+      </div>
+      <div id="versionHistory" class="version-history" hidden></div>
+      <pre id="exportOutput" class="export-output" hidden></pre>
+    </section>
+
+    <section id="respondentView" class="respondent wrap" hidden>
+      <div class="eyebrow">RESPONDENT VIEW · DRAFT PREVIEW</div>
+      <div id="respondentContent"></div>
+    </section>
+  </main>
+
+  <footer class="wrap footer"><span>LEO AS A SERVICE</span><span>Encode taste · test the model · improve the report</span></footer>
+  <script src="app.js"></script>
+</body>
+</html>

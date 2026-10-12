@@ -1,0 +1,12 @@
+{
+  "schema_version": "creator-eval.registry.v1",
+  "evals": [
+    {
+      "slug": "corey-action-gap",
+      "source_host": "coreywilkspsyd.com",
+      "path": "data/evals/corey-action-gap.v1.json",
+      "status": "draft",
+      "public_claims": "source-bounded draft only"
+    }
+  ]
+}
